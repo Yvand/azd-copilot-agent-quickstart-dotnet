@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "localDebug": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "myVariableName": "theValueGoesHere"
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.22",
+  "version": "1.0.0",
+  "id": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+  "developer": {
+    "name": "Yvand",
+    "websiteUrl": "https://example.azurewebsites.net",
+    "privacyUrl": "https://example.azurewebsites.net/privacy",
+    "termsOfUseUrl": "https://example.azurewebsites.net/termsofuse"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Yvand echo bot",
+    "full": "Yvand echo bot"
+  },
+  "description": {
+    "short": "Sample demonstrating a simple Agent that echos back user messages.",
+    "full": "Sample demonstrating AgentSDK + Teams to demonstrate a simple Agent that echos back user messages."
+  },
+  "accentColor": "#FFFFFF",
+  "copilotAgents": {
+    "customEngineAgents": [
+      {
+        "id": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+        "type": "bot"
+      }
+    ]
+  },
+  "bots": [
+    {
+      "botId": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+      "scopes": [
+        "personal"
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "yvand-echo-bot-cjb7hbgzdadwhzaw.francecentral-01.azurewebsites.net"
+  ]
+}
