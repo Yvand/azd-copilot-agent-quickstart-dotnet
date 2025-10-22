@@ -12,7 +12,7 @@ param appSettings object = {}
 param runtimeName string
 param runtimeVersion string
 var runtimeNameAndVersion = '${runtimeName}|${runtimeVersion}'
-param serviceName string = 'api'
+param serviceName string = 'web'
 param storageAccountName string
 // param deploymentStorageContainerName string
 param virtualNetworkSubnetId string = ''
@@ -34,7 +34,9 @@ var applicationInsightsIdentity = identityType == 'UserAssigned'
 var baseAppSettings = {
   // Application Insights settings are always included
   APPLICATIONINSIGHTS_AUTHENTICATION_STRING: applicationInsightsIdentity
-  // APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
+  // https://learn.microsoft.com/en-us/azure/azure-monitor/app/codeless-app-service?tabs=aspnetcore#application-settings-definitions
+  ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
+  XDT_MicrosoftApplicationInsights_Mode: 'recommended'
 }
 
 var userManagedIdentityStorageAccountSettings = identityType == 'UserAssigned'
@@ -69,8 +71,8 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: applicationInsightsName
 }
 
-// Create a Flex Consumption Function App to host the API
-module api 'br/public:avm/res/web/site:0.19.3' = {
+// Create a service web app
+module web 'br/public:avm/res/web/site:0.19.3' = {
   name: '${serviceName}-web-app'
   params: {
     kind: 'app,linux'
@@ -133,8 +135,10 @@ module api 'br/public:avm/res/web/site:0.19.3' = {
   }
 }
 
-output SERVICE_API_NAME string = api.outputs.name
+output SERVICE_NAME string = web.outputs.name
 // Ensure output is always string, handle potential null from module output if SystemAssigned is not used
-output SERVICE_API_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned'
-  ? api.outputs.?systemAssignedMIPrincipalId ?? ''
+output SERVICE_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned'
+  ? web.outputs.?systemAssignedMIPrincipalId ?? ''
   : ''
+
+output SERVICE_DEFAULT_HOST_NAME string = web.outputs.defaultHostname

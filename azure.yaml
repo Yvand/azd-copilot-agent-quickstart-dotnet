@@ -4,7 +4,7 @@ name: azd-copilot-agent-quickstart-dotnet
 metadata:
   template: Yvand/azd-copilot-agent-quickstart-dotnet@1.0.0
 services:
-  api:
+  web:
     project: src
     language: csharp
     host: appservice

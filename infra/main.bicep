@@ -56,10 +56,10 @@ param appSettings object
 
 param vnetEnabled bool = false
 param addKeyVault bool = false
-param apiServiceName string = ''
+param webServiceName string = ''
 @allowed(['SystemAssigned', 'UserAssigned'])
-param apiServiceIdentityType string = 'SystemAssigned'
-param apiUserAssignedIdentityName string = ''
+param webServiceIdentityType string = 'SystemAssigned'
+param webUserAssignedIdentityName string = ''
 param applicationInsightsName string = ''
 param appServicePlanName string = ''
 param logAnalyticsName string = ''
@@ -71,10 +71,16 @@ param cosmosdbAccountName string = ''
 @description('Id of the user identity to be used for testing and debugging. This is not required in production. Leave empty if not needed.')
 param principalId string = deployer().objectId
 
+// Bot services
+param botUserAssignedIdentityName string = ''
+param botServiceName string = ''
+var botAppName = !empty(botServiceName) ? botServiceName : 'bot-${resourceToken}'
+
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
-var functionAppName = !empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesAppService}api-${resourceToken}'
+var functionAppName = !empty(webServiceName) ? webServiceName : '${abbrs.webSitesAppService}web-${resourceToken}'
 var deploymentStorageContainerName = 'app-package-${take(functionAppName, 32)}-${take(toLower(uniqueString(functionAppName, resourceToken)), 7)}'
 // Check if allowedIpAddresses is empty or contains only an empty string
 var allowedIpAddressesNoEmptyString = empty(allowedIpAddresses) || (length(allowedIpAddresses) == 1 && contains(
@@ -93,15 +99,15 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 // User assigned managed identity to be used by the function app to reach storage and other dependencies
 // Assign specific roles to this identity in the RBAC module
-module apiUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.1' = if (apiServiceIdentityType == 'UserAssigned') {
-  name: 'apiUserAssignedIdentity'
+module webUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (webServiceIdentityType == 'UserAssigned') {
+  name: 'webUserAssignedIdentity'
   scope: rg
   params: {
     location: location
     tags: tags
-    name: !empty(apiUserAssignedIdentityName)
-      ? apiUserAssignedIdentityName
-      : '${abbrs.managedIdentityUserAssignedIdentities}api-${resourceToken}'
+    name: !empty(webUserAssignedIdentityName)
+      ? webUserAssignedIdentityName
+      : '${abbrs.managedIdentityUserAssignedIdentities}web-${resourceToken}'
   }
 }
 
@@ -120,14 +126,14 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
   }
 }
 
-module api './app/api.bicep' = {
-  name: 'api'
+module web './app/web.bicep' = {
+  name: 'web'
   scope: rg
   params: {
     name: functionAppName
     location: location
     tags: union(tags, {
-      'azd-service-name': 'api'
+      'azd-service-name': 'web'
     })
     applicationInsightsName: monitoring.outputs.name
     appServicePlanId: appServicePlan.outputs.resourceId
@@ -139,12 +145,12 @@ module api './app/api.bicep' = {
     enableQueue: storageEndpointConfig.enableQueue
     enableTable: storageEndpointConfig.enableTable
     // deploymentStorageContainerName: deploymentStorageContainerName
-    identityType: apiServiceIdentityType
-    UserAssignedManagedIdentityId: apiServiceIdentityType == 'UserAssigned'
-      ? apiUserAssignedIdentity.outputs.resourceId
+    identityType: webServiceIdentityType
+    UserAssignedManagedIdentityId: webServiceIdentityType == 'UserAssigned'
+      ? webUserAssignedIdentity.outputs.resourceId
       : ''
-    UserAssignedManagedIdentityClientId: apiServiceIdentityType == 'UserAssigned'
-      ? apiUserAssignedIdentity.outputs.clientId
+    UserAssignedManagedIdentityClientId: webServiceIdentityType == 'UserAssigned'
+      ? webUserAssignedIdentity.outputs.clientId
       : ''
     appSettings: appSettings
     virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork.outputs.appSubnetID : ''
@@ -158,7 +164,7 @@ var ipRules = [
   }
 ]
 
-// Backing storage for Azure functions backend API
+// Backing storage for Azure app service
 module storage 'br/public:avm/res/storage/storage-account:0.8.3' = {
   name: 'storage'
   scope: rg
@@ -204,9 +210,9 @@ module rbac 'app/rbac.bicep' = {
   params: {
     storageAccountName: storage.outputs.name
     appInsightsName: monitoring.outputs.name
-    managedIdentityPrincipalId: apiServiceIdentityType == 'UserAssigned'
-      ? apiUserAssignedIdentity.outputs.principalId
-      : api.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    managedIdentityPrincipalId: webServiceIdentityType == 'UserAssigned'
+      ? webUserAssignedIdentity.outputs.principalId
+      : web.outputs.SERVICE_IDENTITY_PRINCIPAL_ID
     userIdentityPrincipalId: principalId
     enableBlob: storageEndpointConfig.enableBlob
     enableQueue: storageEndpointConfig.enableQueue
@@ -303,8 +309,37 @@ module vaultPrivateEndpoint 'app/vault-PrivateEndpoint.bicep' = if (vnetEnabled 
   }
 }
 
+// User assigned managed identity to be used by the bot service
+module botUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = {
+  name: 'botUserAssignedIdentity'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: !empty(botUserAssignedIdentityName)
+      ? botUserAssignedIdentityName
+      : '${abbrs.managedIdentityUserAssignedIdentities}bot-${resourceToken}'
+  }
+}
+
+module bot './app/bot.bicep' = {
+  name: 'bot'
+  scope: rg
+  params: {
+    name: botAppName
+    location: 'global'
+    tags: tags
+    UserAssignedManagedIdentityResourceId: botUserAssignedIdentity.outputs.resourceId
+    UserAssignedManagedIdentityClientId: botUserAssignedIdentity.outputs.clientId
+    UserAssignedManagedIdentityTenantId: tenant().tenantId
+    endpoint: 'https://${web.outputs.SERVICE_DEFAULT_HOST_NAME}/api/messages'
+  }
+}
+
+
 // App outputs
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
-output SERVICE_API_NAME string = api.outputs.SERVICE_API_NAME
-output AZURE_FUNCTION_NAME string = api.outputs.SERVICE_API_NAME
+output WEB_NAME string = web.outputs.SERVICE_NAME
+output WEB_DEFAULT_HOST_NAME string = web.outputs.SERVICE_DEFAULT_HOST_NAME
+output BOT_SERVICE_APP_CLIENT_ID string = botUserAssignedIdentity.outputs.clientId
