@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Azure.Identity;
+using Microsoft.Extensions.Logging;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,13 @@ builder.Services.AddSingleton<IStorage, MemoryStorage>();
 builder.Services.AddControllers();
 builder.Services.AddAgentAspNetAuthentication(builder.Configuration);
 
+// Add OpenTelemetry and configure it to use Azure Monitor.
+// https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable
+builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
+        // https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication
+        options.Credential = new ManagedIdentityCredential();
+    });
+
 WebApplication app = builder.Build();
 
 // Enable AspNet authentication and authorization
@@ -42,6 +52,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/", () => "Microsoft Agents SDK Sample");
+
+app.Logger.LogInformation("YVAND Hello World!");
 
 // This receives incoming messages from Azure Bot Service or other SDK Agents
 var incomingRoute = app.MapPost("/api/messages", async (HttpRequest request, HttpResponse response, IAgentHttpAdapter adapter, IAgent agent, CancellationToken cancellationToken) =>

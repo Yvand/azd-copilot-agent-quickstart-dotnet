@@ -20,6 +20,7 @@ public class MyAgent : AgentApplication
 
     private async Task WelcomeMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
+        System.Diagnostics.Trace.WriteLine("YVAND incoming WelcomeMessageAsync");
         foreach (ChannelAccount member in turnContext.Activity.MembersAdded)
         {
             if (member.Id != turnContext.Activity.Recipient.Id)
@@ -31,6 +32,7 @@ public class MyAgent : AgentApplication
 
     private async Task OnMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
+        System.Diagnostics.Trace.WriteLine("YVAND incoming OnMessageAsync");
         await turnContext.SendActivityAsync($"You said: {turnContext.Activity.Text}", cancellationToken: cancellationToken);
     }
 }
