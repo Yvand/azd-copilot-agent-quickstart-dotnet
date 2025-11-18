@@ -5,16 +5,15 @@ param tags object = {}
 param applicationInsightsName string = ''
 param appServicePlanId string
 param appSettings object = {}
-// Runtime Properties
+
 @allowed([
   'dotnet', 'dotnetcore', 'dotnet-isolated', 'node', 'python', 'java', 'powershell', 'custom'
 ])
 param runtimeName string
 param runtimeVersion string
 var runtimeNameAndVersion = '${runtimeName}|${runtimeVersion}'
-param serviceName string = 'web'
+param serviceName string = 'appservice'
 param storageAccountName string
-// param deploymentStorageContainerName string
 param virtualNetworkSubnetId string = ''
 param UserAssignedManagedIdentityId string = ''
 param UserAssignedManagedIdentityClientId string = ''
@@ -72,7 +71,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 }
 
 // Create a service web app
-module web 'br/public:avm/res/web/site:0.19.3' = {
+module appservice 'br/public:avm/res/web/site:0.19.3' = {
   name: '${serviceName}-web-app'
   params: {
     kind: 'app,linux'
@@ -135,10 +134,9 @@ module web 'br/public:avm/res/web/site:0.19.3' = {
   }
 }
 
-output SERVICE_NAME string = web.outputs.name
+output serviceName string = appservice.outputs.name
 // Ensure output is always string, handle potential null from module output if SystemAssigned is not used
-output SERVICE_IDENTITY_PRINCIPAL_ID string = identityType == 'SystemAssigned'
-  ? web.outputs.?systemAssignedMIPrincipalId ?? ''
+output serviceIdentityPrincipalId string = identityType == 'SystemAssigned'
+  ? appservice.outputs.?systemAssignedMIPrincipalId ?? ''
   : ''
-
-output SERVICE_DEFAULT_HOST_NAME string = web.outputs.defaultHostname
+output serviceDefaultHostName string = appservice.outputs.defaultHostname

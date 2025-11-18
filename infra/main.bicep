@@ -72,10 +72,13 @@ param cosmosdbAccountName string = ''
 param principalId string = deployer().objectId
 
 // Bot services
+@allowed(['SingleTenant', 'UserAssignedMSI'])
+param botAppType string = 'SingleTenant'
 param botUserAssignedIdentityName string = ''
 param botServiceName string = ''
 var botAppName = !empty(botServiceName) ? botServiceName : 'bot-${resourceToken}'
 
+var appRegistrationName string = environmentName
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -89,6 +92,16 @@ var allowedIpAddressesNoEmptyString = empty(allowedIpAddresses) || (length(allow
   ))
   ? []
   : allowedIpAddresses
+
+
+// Create the app registration in Entra ID
+module resourceAppRegistration 'app/entraid-app.bicep' = if (botAppType == 'SingleTenant') {
+  name: 'entraAppRegistration'
+  scope: rg
+  params: {
+    appRegistrationName: appRegistrationName
+  }
+}
 
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -126,34 +139,32 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
   }
 }
 
-module web './app/web.bicep' = {
-  name: 'web'
+module appservice './app/appservice.bicep' = {
+  name: 'appservice'
   scope: rg
   params: {
     name: functionAppName
     location: location
     tags: union(tags, {
-      'azd-service-name': 'web'
+      'azd-service-name': 'appservice'
     })
     applicationInsightsName: monitoring.outputs.name
     appServicePlanId: appServicePlan.outputs.resourceId
     runtimeName: 'dotnetcore'
     runtimeVersion: '8.0'
-    // runtimeNameAndVersion: 'DOTNETCORE|8.0'
     storageAccountName: storage.outputs.name
     enableBlob: storageEndpointConfig.enableBlob
     enableQueue: storageEndpointConfig.enableQueue
     enableTable: storageEndpointConfig.enableTable
-    // deploymentStorageContainerName: deploymentStorageContainerName
     identityType: webServiceIdentityType
     UserAssignedManagedIdentityId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity.outputs.resourceId
+      ? webUserAssignedIdentity!.outputs.resourceId
       : ''
     UserAssignedManagedIdentityClientId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity.outputs.clientId
+      ? webUserAssignedIdentity!.outputs.clientId
       : ''
     appSettings: appSettings
-    virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork.outputs.appSubnetID : ''
+    virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork!.outputs.appSubnetID : ''
   }
 }
 
@@ -211,14 +222,14 @@ module rbac 'app/rbac.bicep' = {
     storageAccountName: storage.outputs.name
     appInsightsName: monitoring.outputs.name
     managedIdentityPrincipalId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity.outputs.principalId
-      : web.outputs.SERVICE_IDENTITY_PRINCIPAL_ID
+      ? webUserAssignedIdentity!.outputs.principalId
+      : appservice.outputs.serviceIdentityPrincipalId
     userIdentityPrincipalId: principalId
     enableBlob: storageEndpointConfig.enableBlob
     enableQueue: storageEndpointConfig.enableQueue
     enableTable: storageEndpointConfig.enableTable
     allowUserIdentityPrincipal: storageEndpointConfig.allowUserIdentityPrincipal
-    keyVaultName: addKeyVault ? vault.outputs.name : ''
+    keyVaultName: addKeyVault ? vault!.outputs.name : ''
   }
 }
 
@@ -310,7 +321,7 @@ module vaultPrivateEndpoint 'app/vault-PrivateEndpoint.bicep' = if (vnetEnabled 
 }
 
 // User assigned managed identity to be used by the bot service
-module botUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = {
+module botUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (botAppType == 'UserAssignedMSI') {
   name: 'botUserAssignedIdentity'
   scope: rg
   params: {
@@ -329,10 +340,11 @@ module bot './app/bot.bicep' = {
     name: botAppName
     location: 'global'
     tags: tags
-    UserAssignedManagedIdentityResourceId: botUserAssignedIdentity.outputs.resourceId
-    UserAssignedManagedIdentityClientId: botUserAssignedIdentity.outputs.clientId
+    appType: botAppType
+    UserAssignedManagedIdentityResourceId: botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.resourceId : ''
+    applicationClientId: botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : resourceAppRegistration!.outputs.clientId
     UserAssignedManagedIdentityTenantId: tenant().tenantId
-    endpoint: 'https://${web.outputs.SERVICE_DEFAULT_HOST_NAME}/api/messages'
+    endpoint: 'https://${appservice.outputs.serviceDefaultHostName}/api/messages'
   }
 }
 
@@ -340,6 +352,9 @@ module bot './app/bot.bicep' = {
 // App outputs
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
-output WEB_NAME string = web.outputs.SERVICE_NAME
-output WEB_DEFAULT_HOST_NAME string = web.outputs.SERVICE_DEFAULT_HOST_NAME
-output BOT_SERVICE_APP_CLIENT_ID string = botUserAssignedIdentity.outputs.clientId
+output APPSERVICE_NAME string = appservice.outputs.serviceName
+output APPSERVICE_DEFAULT_HOST_NAME string = appservice.outputs.serviceDefaultHostName
+output BOT_SERVICE_APP_CLIENT_ID string = botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : ''
+output APP_CLIENT_ID string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.clientId : ''
+output APP_DISPLAY_NAME string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.displayName : ''
+output APP_UNIQUE_NAME string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.uniqueName : ''

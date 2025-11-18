@@ -3,12 +3,14 @@ param name string
 param location string = 'global'
 param tags object = {}
 
+@allowed(['SingleTenant', 'UserAssignedMSI'])
+param appType string
 param UserAssignedManagedIdentityResourceId string
-param UserAssignedManagedIdentityClientId string
+param applicationClientId string
 param UserAssignedManagedIdentityTenantId string
 param endpoint string = 'https://example.com/api/messages'
 
-resource symbolicname 'Microsoft.BotService/botServices@2023-09-15-preview' = {
+resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   location: location
   name: 'bot-service-${name}'
   tags: tags
@@ -19,10 +21,10 @@ resource symbolicname 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   properties: {
     displayName: name
     endpoint: endpoint
-    msaAppId: UserAssignedManagedIdentityClientId
+    msaAppId: applicationClientId
     msaAppMSIResourceId: UserAssignedManagedIdentityResourceId
     msaAppTenantId: UserAssignedManagedIdentityTenantId
-    msaAppType: 'UserAssignedMSI'
+    msaAppType: appType
     openWithHint: ''
   }
 }
