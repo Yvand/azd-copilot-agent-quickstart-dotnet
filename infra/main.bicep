@@ -343,7 +343,7 @@ module bot './app/bot.bicep' = {
     appType: botAppType
     UserAssignedManagedIdentityResourceId: botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.resourceId : ''
     applicationClientId: botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : resourceAppRegistration!.outputs.clientId
-    UserAssignedManagedIdentityTenantId: tenant().tenantId
+    tenantId: tenant().tenantId
     endpoint: 'https://${appservice.outputs.serviceDefaultHostName}/api/messages'
   }
 }

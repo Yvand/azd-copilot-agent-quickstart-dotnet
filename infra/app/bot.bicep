@@ -1,14 +1,15 @@
 param name string
 @allowed(['global', 'westeurope', 'westus', 'centralindia'])
-param location string = 'global'
+param location string = 'westeurope'
 param tags object = {}
 
+param sku string = 'F0'
 @allowed(['SingleTenant', 'UserAssignedMSI'])
 param appType string
 param UserAssignedManagedIdentityResourceId string
 param applicationClientId string
-param UserAssignedManagedIdentityTenantId string
-param endpoint string = 'https://example.com/api/messages'
+param tenantId string
+param endpoint string
 
 resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   location: location
@@ -16,15 +17,17 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
   tags: tags
   kind: 'azurebot'
   sku: {
-    name: 'F0'
+    name: sku
   }
   properties: {
     displayName: name
     endpoint: endpoint
     msaAppId: applicationClientId
     msaAppMSIResourceId: UserAssignedManagedIdentityResourceId
-    msaAppTenantId: UserAssignedManagedIdentityTenantId
+    msaAppTenantId: tenantId
     msaAppType: appType
     openWithHint: ''
+    appPasswordHint: ''
+    tenantId: tenantId
   }
 }
