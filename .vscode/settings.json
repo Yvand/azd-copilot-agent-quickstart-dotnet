@@ -1,0 +1,5 @@
+{
+   "appService.preDeployTask": "publish-release",
+   "appService.deploySubpath": "bin/Release/net8.0/publish",
+   "appService.defaultWebAppToDeploy": "/subscriptions/26508ee7-4aa7-4f59-9180-842360f2b153/resourceGroups/agent-quickstart-dotnet/providers/Microsoft.Web/sites/yvand-echo-bot"
+}

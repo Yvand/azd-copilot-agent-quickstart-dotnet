@@ -38,12 +38,16 @@ builder.Services.AddSingleton<IStorage, MemoryStorage>();
 builder.Services.AddControllers();
 builder.Services.AddAgentAspNetAuthentication(builder.Configuration);
 
-// Add OpenTelemetry and configure it to use Azure Monitor.
-// https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable
-builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
+if (!builder.Environment.IsDevelopment())
+{
+    // Add OpenTelemetry and configure it to use Azure Monitor.
+    // https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable
+    builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+    {
         // https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication
         options.Credential = new ManagedIdentityCredential();
     });
+}
 
 WebApplication app = builder.Build();
 
