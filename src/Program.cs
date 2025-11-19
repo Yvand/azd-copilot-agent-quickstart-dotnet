@@ -53,11 +53,10 @@ app.UseAuthorization();
 
 app.MapGet("/", () => "Microsoft Agents SDK Sample");
 
-app.Logger.LogInformation("YVAND Hello World!");
-
 // This receives incoming messages from Azure Bot Service or other SDK Agents
-var incomingRoute = app.MapPost("/api/messages", async (HttpRequest request, HttpResponse response, IAgentHttpAdapter adapter, IAgent agent, CancellationToken cancellationToken) =>
+var incomingRoute = app.MapPost("/api/messages", async (ILogger<Program> logger, HttpRequest request, HttpResponse response, IAgentHttpAdapter adapter, IAgent agent, CancellationToken cancellationToken) =>
 {
+    logger.LogInformation("YVAND /api/messages");
     await adapter.ProcessAsync(request, response, agent, cancellationToken);
 });
 
