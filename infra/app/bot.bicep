@@ -31,3 +31,91 @@ resource bot 'Microsoft.BotService/botServices@2023-09-15-preview' = {
     tenantId: tenantId
   }
 }
+
+// resource botCreated 'Microsoft.BotService/botServices@2023-09-15-preview' existing = {
+//   dependsOn: [
+//     bot
+//   ]
+//   scope: resourceGroup()
+//   name: bot.name
+// }
+
+// resource teamsChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   parent: botCreated
+//   name: 'MsTeamsChannel'
+//   properties: {
+//     channelName: 'MsTeamsChannel'
+//     properties: {
+//       acceptedTerms: true
+//       callingWebhook: 'string'
+//       deploymentEnvironment: 'string'
+//       enableCalling: true
+//       incomingCallRoute: 'string'
+//       isEnabled: true
+//     }
+//   }
+// }
+
+// resource directLineChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   parent: botCreated
+//   name: 'DirectLineChannel'
+//   properties: {
+//     channelName: 'DirectLineChannel'
+//     properties: {
+//       extensionKey1: 'string'
+//       extensionKey2: 'string'
+//       sites: [
+//         {
+//           appId: 'string'
+//           eTag: 'string'
+//           isBlockUserUploadEnabled: bool
+//           isDetailedLoggingEnabled: true
+//           isEnabled: true
+//           isEndpointParametersEnabled: bool
+//           isNoStorageEnabled: bool
+//           isSecureSiteEnabled: bool
+//           isV1Enabled: bool
+//           isV3Enabled: bool
+//           isWebchatPreviewEnabled: true
+//           isWebChatSpeechEnabled: bool
+//           siteName: 'Default Site'
+//           tenantId: tenant().tenantId
+//           trustedOrigins: [
+//             'string'
+//           ]
+//         }
+//       ]
+//     }
+//   }
+// }
+
+// resource webChatChannel 'Microsoft.BotService/botServices/channels@2023-09-15-preview' = {
+//   parent: botCreated
+//   name: 'WebChatChannel'
+//   properties: {
+//     channelName: 'WebChatChannel'
+//     properties: {
+//       sites: [
+//         {
+//           appId: 'string'
+//           eTag: 'string'
+//           isBlockUserUploadEnabled: bool
+//           isDetailedLoggingEnabled: true
+//           isEnabled: true
+//           isEndpointParametersEnabled: bool
+//           isNoStorageEnabled: bool
+//           isSecureSiteEnabled: bool
+//           isV1Enabled: bool
+//           isV3Enabled: bool
+//           isWebchatPreviewEnabled: true
+//           isWebChatSpeechEnabled: bool
+//           siteName: 'Default Site'
+//           tenantId: tenant().tenantId
+//           trustedOrigins: [
+//             'string'
+//           ]
+//         }
+//       ]
+//     }
+//   }
+// }

@@ -354,7 +354,7 @@ output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output APPSERVICE_NAME string = appservice.outputs.serviceName
 output APPSERVICE_DEFAULT_HOST_NAME string = appservice.outputs.serviceDefaultHostName
-output BOT_SERVICE_APP_CLIENT_ID string = botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : ''
+output BOTSERVICE_MSI_CLIENT_ID string = botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : ''
 output APP_CLIENT_ID string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.clientId : ''
 output APP_DISPLAY_NAME string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.displayName : ''
 output APP_UNIQUE_NAME string = botAppType == 'SingleTenant' ? resourceAppRegistration!.outputs.uniqueName : ''

@@ -16,6 +16,9 @@
         "${ALLOWED_IP_ADDRESSES}"
       ]
     },
+    "botAppType": {
+      "value": "${IN_BOTAPPTYPE}"
+    },
     "appSettings": {
       "value": {
       }
