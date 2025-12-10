@@ -58,7 +58,7 @@ param vnetEnabled bool = false
 param addKeyVault bool = false
 param webServiceName string = ''
 @allowed(['SystemAssigned', 'UserAssigned'])
-param webServiceIdentityType string = 'SystemAssigned'
+param webServiceIdentityType string = 'UserAssigned'
 param webUserAssignedIdentityName string = ''
 param applicationInsightsName string = ''
 param appServicePlanName string = ''
@@ -110,19 +110,19 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-// User assigned managed identity to be used by the function app to reach storage and other dependencies
-// Assign specific roles to this identity in the RBAC module
-module webUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (webServiceIdentityType == 'UserAssigned') {
-  name: 'webUserAssignedIdentity'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    name: !empty(webUserAssignedIdentityName)
-      ? webUserAssignedIdentityName
-      : '${abbrs.managedIdentityUserAssignedIdentities}web-${resourceToken}'
-  }
-}
+// // User assigned managed identity to be used by the function app to reach storage and other dependencies
+// // Assign specific roles to this identity in the RBAC module
+// module webUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (webServiceIdentityType == 'UserAssigned') {
+//   name: 'webUserAssignedIdentity'
+//   scope: rg
+//   params: {
+//     location: location
+//     tags: tags
+//     name: !empty(webUserAssignedIdentityName)
+//       ? webUserAssignedIdentityName
+//       : '${abbrs.managedIdentityUserAssignedIdentities}web-${resourceToken}'
+//   }
+// }
 
 // Create an App Service Plan to group applications under the same payment plan and SKU
 module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
@@ -158,10 +158,10 @@ module appservice './app/appservice.bicep' = {
     enableTable: storageEndpointConfig.enableTable
     identityType: webServiceIdentityType
     UserAssignedManagedIdentityId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity!.outputs.resourceId
+      ? botUserAssignedIdentity!.outputs.resourceId
       : ''
     UserAssignedManagedIdentityClientId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity!.outputs.clientId
+      ? botUserAssignedIdentity!.outputs.clientId
       : ''
     appSettings: appSettings
     virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork!.outputs.appSubnetID : ''
@@ -222,7 +222,7 @@ module rbac 'app/rbac.bicep' = {
     storageAccountName: storage.outputs.name
     appInsightsName: monitoring.outputs.name
     managedIdentityPrincipalId: webServiceIdentityType == 'UserAssigned'
-      ? webUserAssignedIdentity!.outputs.principalId
+      ? botUserAssignedIdentity!.outputs.principalId
       : appservice.outputs.serviceIdentityPrincipalId
     userIdentityPrincipalId: principalId
     enableBlob: storageEndpointConfig.enableBlob

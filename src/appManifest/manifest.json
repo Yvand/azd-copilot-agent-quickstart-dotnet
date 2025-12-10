@@ -1,8 +1,8 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
   "manifestVersion": "1.22",
-  "version": "1.0.0",
-  "id": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+  "version": "1.0.1",
+  "id": "fe19baab-107d-47a9-8628-37bad65f7ccc",
   "developer": {
     "name": "Yvand",
     "websiteUrl": "https://example.azurewebsites.net",
@@ -14,8 +14,8 @@
     "outline": "outline.png"
   },
   "name": {
-    "short": "Yvand echo bot",
-    "full": "Yvand echo bot"
+    "short": "Yvand azd echo bot",
+    "full": "Yvand azd echo bot"
   },
   "description": {
     "short": "Sample demonstrating a simple Agent that echos back user messages.",
@@ -25,14 +25,14 @@
   "copilotAgents": {
     "customEngineAgents": [
       {
-        "id": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+        "id": "ae5266c7-1ca5-4f14-8259-3e01561c6e98",
         "type": "bot"
       }
     ]
   },
   "bots": [
     {
-      "botId": "044ec499-4468-47df-9f4c-ecc920aa7f67",
+      "botId": "ae5266c7-1ca5-4f14-8259-3e01561c6e98",
       "scopes": [
         "personal"
       ],
@@ -45,6 +45,6 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "yvand-echo-bot-cjb7hbgzdadwhzaw.francecentral-01.azurewebsites.net"
+    "app-web-elvdekvc7ukgk-aqd9gsgze5bxgffp.francecentral-01.azurewebsites.net"
   ]
 }
