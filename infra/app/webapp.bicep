@@ -12,7 +12,6 @@ param appSettings object = {}
 param runtimeName string
 param runtimeVersion string
 var runtimeNameAndVersion = '${runtimeName}|${runtimeVersion}'
-param serviceName string = 'appservice'
 param storageAccountName string
 param virtualNetworkSubnetId string = ''
 param UserAssignedManagedIdentityId string = ''
@@ -73,12 +72,12 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 
 // Create a service web app
 module appservice 'br/public:avm/res/web/site:0.19.3' = {
-  name: '${serviceName}-web-app'
+  name: name
   params: {
     kind: 'app,linux'
     name: name
     location: location
-    tags: union(tags, { 'azd-service-name': serviceName })
+    tags: tags
     serverFarmResourceId: appServicePlanId
     managedIdentities: {
       systemAssigned: identityType == 'SystemAssigned'
