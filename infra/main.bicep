@@ -64,10 +64,8 @@ param webAppUserAssignedIdentityName string = ''
 param webAppPlanName string = ''
 param applicationInsightsName string = ''
 param logAnalyticsName string = ''
-param storageAccountName string = ''
 param vNetName string = ''
 param keyVaultName string = ''
-param cosmosdbAccountName string = ''
 @description('Id of the user identity to be used for testing and debugging. This is not required in production. Leave empty if not needed.')
 param principalId string = deployer().objectId
 
@@ -84,7 +82,7 @@ var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 var webAppServiceName = !empty(webAppName) ? webAppName : '${abbrs.webSitesAppService}web-${resourceToken}'
-var deploymentStorageContainerName = 'app-package-${take(webAppServiceName, 32)}-${take(toLower(uniqueString(webAppServiceName, resourceToken)), 7)}'
+
 // Check if allowedIpAddresses is empty or contains only an empty string
 var allowedIpAddressesNoEmptyString = empty(allowedIpAddresses) || (length(allowedIpAddresses) == 1 && contains(
     allowedIpAddresses,
@@ -153,10 +151,6 @@ module webApp './app/webapp.bicep' = {
     runtimeName: 'dotnetcore'
     runtimeVersion: '8.0'
     appSettings: webAppEnvVars
-    storageAccountName: storage.outputs.name
-    enableBlob: storageEndpointConfig.enableBlob
-    enableQueue: storageEndpointConfig.enableQueue
-    enableTable: storageEndpointConfig.enableTable
     virtualNetworkSubnetId: vnetEnabled ? serviceVirtualNetwork!.outputs.appSubnetID : ''
     identityType: webAppIdentityType
     UserAssignedManagedIdentityId: webAppIdentityType == 'UserAssigned'
@@ -178,60 +172,17 @@ var ipRules = [
   }
 ]
 
-// Backing storage for Azure app service
-module storage 'br/public:avm/res/storage/storage-account:0.30.0' = {
-  name: 'storage'
-  scope: rg
-  params: {
-    name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
-    allowBlobPublicAccess: false
-    allowSharedKeyAccess: false // Disable local authentication methods as per policy
-    dnsEndpointType: 'Standard'
-    publicNetworkAccess: vnetEnabled ? 'Disabled' : 'Enabled'
-    networkAcls: vnetEnabled
-      ? {
-          defaultAction: 'Deny'
-          bypass: 'None'
-          ipRules: empty(allowedIpAddressesNoEmptyString) ? [] : ipRules
-        }
-      : {
-          defaultAction: 'Allow'
-          bypass: 'AzureServices'
-          ipRules: empty(allowedIpAddressesNoEmptyString) ? [] : ipRules
-        }
-    blobServices: {
-      containers: [{ name: deploymentStorageContainerName }]
-    }
-    minimumTlsVersion: 'TLS1_2' // Enforcing TLS 1.2 for better security
-    location: location
-    tags: tags
-  }
-}
-
-// Define the configuration object locally to pass to the modules
-var storageEndpointConfig = {
-  enableBlob: true // Required for AzureWebJobsStorage, .zip deployment, Event Hubs trigger and Timer trigger checkpointing
-  enableQueue: false // Required for Durable Functions and MCP trigger
-  enableTable: false // Required for Durable Functions and OpenAI triggers and bindings
-  enableFiles: false // Not required, used in legacy scenarios
-  allowUserIdentityPrincipal: true // Allow interactive user identity to access for testing and debugging
-}
-
 // Consolidated Role Assignments
 module rbac 'app/rbac.bicep' = {
   name: 'rbacAssignments'
   scope: rg
   params: {
-    storageAccountName: storage.outputs.name
+    // storageAccountName: storage.outputs.name
     appInsightsName: monitoring.outputs.name
     managedIdentityPrincipalId: webAppIdentityType == 'UserAssigned'
       ? webAppUserAssignedIdentity!.outputs.principalId
       : webApp.outputs.serviceIdentityPrincipalId
     userIdentityPrincipalId: principalId
-    enableBlob: storageEndpointConfig.enableBlob
-    enableQueue: storageEndpointConfig.enableQueue
-    enableTable: storageEndpointConfig.enableTable
-    allowUserIdentityPrincipal: storageEndpointConfig.allowUserIdentityPrincipal
     keyVaultName: addKeyVault ? vault!.outputs.name : ''
   }
 }
@@ -244,21 +195,6 @@ module serviceVirtualNetwork 'app/vnet.bicep' = if (vnetEnabled) {
     location: location
     tags: tags
     vNetName: !empty(vNetName) ? vNetName : '${abbrs.networkVirtualNetworks}${resourceToken}'
-  }
-}
-
-module storagePrivateEndpoint 'app/storage-PrivateEndpoint.bicep' = if (vnetEnabled) {
-  name: 'servicePrivateEndpoint'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    virtualNetworkName: !empty(vNetName) ? vNetName : '${abbrs.networkVirtualNetworks}${resourceToken}'
-    subnetName: vnetEnabled ? serviceVirtualNetwork.outputs.peSubnetName : '' // Keep conditional check for safety, though module won't run if !vnetEnabled
-    resourceName: storage.outputs.name
-    enableBlob: storageEndpointConfig.enableBlob
-    enableQueue: storageEndpointConfig.enableQueue
-    enableTable: storageEndpointConfig.enableTable
   }
 }
 
@@ -351,13 +287,10 @@ module bot './app/bot.bicep' = {
   }
 }
 
-
 // App outputs
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output WEBAPP_NAME string = webApp.outputs.serviceName
 output WEBAPP_DEFAULT_HOST_NAME string = webApp.outputs.serviceDefaultHostName
-output BOTSERVICE_MSI_CLIENT_ID string = botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : ''
-output BOTAPP_CLIENT_ID string = botAppType == 'SingleTenant' ? botAppRegistration!.outputs.clientId : ''
-output BOTAPP_DISPLAY_NAME string = botAppType == 'SingleTenant' ? botAppRegistration!.outputs.displayName : ''
-output BOTAPP_UNIQUE_NAME string = botAppType == 'SingleTenant' ? botAppRegistration!.outputs.uniqueName : ''
+output BOTSERVICE_CLIENT_ID string = botAppType == 'UserAssignedMSI' ? botUserAssignedIdentity!.outputs.clientId : botAppRegistration!.outputs.clientId
+output BOTSERVICE_NAME string = bot.outputs.botServiceName

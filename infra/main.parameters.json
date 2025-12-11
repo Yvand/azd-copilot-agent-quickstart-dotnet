@@ -11,11 +11,6 @@
     "resourceGroupName": {
       "value": "${AZURE_ENV_NAME}"
     },
-    "allowedIpAddresses": {
-      "value": [
-        "${ALLOWED_IP_ADDRESSES}"
-      ]
-    },
     "botAppType": {
       "value": "${IN_BOTAPPTYPE}"
     },

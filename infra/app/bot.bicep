@@ -2,7 +2,6 @@ param name string
 @allowed(['global', 'westeurope', 'westus', 'centralindia'])
 param location string = 'westeurope'
 param tags object = {}
-
 param sku string = 'F0'
 @allowed(['SingleTenant', 'UserAssignedMSI'])
 param appType string
