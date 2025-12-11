@@ -17,6 +17,7 @@ param storageAccountName string
 param virtualNetworkSubnetId string = ''
 param UserAssignedManagedIdentityId string = ''
 param UserAssignedManagedIdentityClientId string = ''
+param botUserAssignedManagedIdentityId string
 param enableBlob bool = true
 param enableQueue bool = false
 param enableTable bool = false
@@ -82,9 +83,10 @@ module appservice 'br/public:avm/res/web/site:0.19.3' = {
     managedIdentities: {
       systemAssigned: identityType == 'SystemAssigned'
       userAssignedResourceIds: identityType == 'SystemAssigned'
-        ? null
+        ? [botUserAssignedManagedIdentityId]
         : [
             '${UserAssignedManagedIdentityId}'
+            '${botUserAssignedManagedIdentityId}'
           ]
     }
     

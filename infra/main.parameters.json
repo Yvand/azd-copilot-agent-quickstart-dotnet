@@ -19,7 +19,7 @@
     "botAppType": {
       "value": "${IN_BOTAPPTYPE}"
     },
-    "appSettings": {
+    "webAppEnvVars": {
       "value": {
       }
     }
