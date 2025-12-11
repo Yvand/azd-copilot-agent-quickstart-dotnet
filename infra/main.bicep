@@ -104,7 +104,7 @@ module botAppRegistration 'app/entraid-app.bicep' = if (botAppType == 'SingleTen
 }
 
 // Organize resources in a resource group
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
   location: location
   tags: tags
@@ -112,7 +112,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 // User assigned managed identity to be used by the function app to reach storage and other dependencies
 // Assign specific roles to this identity in the RBAC module
-module webAppUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (webAppIdentityType == 'UserAssigned') {
+module webAppUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.3' = if (webAppIdentityType == 'UserAssigned') {
   name: 'appServiceUserAssignedIdentity'
   scope: rg
   params: {
@@ -179,7 +179,7 @@ var ipRules = [
 ]
 
 // Backing storage for Azure app service
-module storage 'br/public:avm/res/storage/storage-account:0.8.3' = {
+module storage 'br/public:avm/res/storage/storage-account:0.30.0' = {
   name: 'storage'
   scope: rg
   params: {
@@ -263,7 +263,7 @@ module storagePrivateEndpoint 'app/storage-PrivateEndpoint.bicep' = if (vnetEnab
 }
 
 // Monitor application with Azure Monitor - Log Analytics and Application Insights
-module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = {
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.14.2' = {
   name: '${uniqueString(deployment().name, location)}-loganalytics'
   scope: rg
   params: {
@@ -274,7 +274,7 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.11.1' = 
   }
 }
 
-module monitoring 'br/public:avm/res/insights/component:0.6.0' = {
+module monitoring 'br/public:avm/res/insights/component:0.7.1' = {
   name: '${uniqueString(deployment().name, location)}-appinsights'
   scope: rg
   params: {
@@ -287,7 +287,7 @@ module monitoring 'br/public:avm/res/insights/component:0.6.0' = {
 }
 
 // Azure key-vault
-module vault 'br/public:avm/res/key-vault/vault:0.12.1' = if (addKeyVault) {
+module vault 'br/public:avm/res/key-vault/vault:0.13.3' = if (addKeyVault) {
   name: '${uniqueString(deployment().name, location)}-vault'
   scope: rg
   params: {
@@ -324,7 +324,7 @@ module vaultPrivateEndpoint 'app/vault-PrivateEndpoint.bicep' = if (vnetEnabled 
 }
 
 // User assigned managed identity to be used by the bot service
-module botUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.2' = if (botAppType == 'UserAssignedMSI') {
+module botUserAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.3' = if (botAppType == 'UserAssignedMSI') {
   name: 'botUserAssignedIdentity'
   scope: rg
   params: {

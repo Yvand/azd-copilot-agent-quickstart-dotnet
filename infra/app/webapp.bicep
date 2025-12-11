@@ -62,7 +62,7 @@ var allAppSettings = union(
   userManagedIdentityStorageAccountSettings
 )
 
-resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
+resource stg 'Microsoft.Storage/storageAccounts@2025-06-01' existing = {
   name: storageAccountName
 }
 
@@ -71,7 +71,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 }
 
 // Create a service web app
-module appservice 'br/public:avm/res/web/site:0.19.3' = {
+module appservice 'br/public:avm/res/web/site:0.19.4' = {
   name: name
   params: {
     kind: 'app,linux'
