@@ -8,3 +8,11 @@ services:
     project: src
     language: csharp
     host: appservice
+hooks:
+  postprovision:
+    posix:
+      shell: sh
+      run: ./scripts/map-env-vars.sh
+      interactive: true
+      continueOnError: false
+  

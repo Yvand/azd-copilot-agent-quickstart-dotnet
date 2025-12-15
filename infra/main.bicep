@@ -290,6 +290,7 @@ module bot './app/bot.bicep' = {
 
 // App outputs
 output AZURE_LOCATION string = location
+output AZURE_RESOURCE_GROUP_NAME string = rg.name
 output AZURE_TENANT_ID string = tenant().tenantId
 output WEBAPP_NAME string = webApp.outputs.serviceName
 output WEBAPP_DEFAULT_HOST_NAME string = webApp.outputs.serviceDefaultHostName

@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-10.0#non-prefixed-environment-variables
 builder.Configuration.AddEnvironmentVariables(prefix: "M365AgentQuickstart_");
 
 builder.Services.AddHttpClient();
