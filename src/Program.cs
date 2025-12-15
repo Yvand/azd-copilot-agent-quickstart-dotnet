@@ -13,8 +13,11 @@ using System.Threading;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables(prefix: "M365AgentQuickstart_");
 
 builder.Services.AddHttpClient();
 

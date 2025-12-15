@@ -62,6 +62,7 @@ param webAppName string = ''
 param webAppIdentityType string = 'UserAssigned'
 param webAppUserAssignedIdentityName string = ''
 param webAppPlanName string = ''
+param webAppServicePlanSku string = 'F1'
 param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 param vNetName string = ''
@@ -132,7 +133,7 @@ module webAppServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
     location: location
     tags: tags
     kind: 'linux'
-    skuName: 'F1'
+    skuName: webAppServicePlanSku
     skuCapacity: 1
   }
 }
