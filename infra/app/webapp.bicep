@@ -7,20 +7,22 @@ param appServicePlanId string
 param appSettings object = {}
 
 @allowed([
-  'dotnet', 'dotnetcore', 'dotnet-isolated', 'node', 'python', 'java', 'powershell', 'custom'
+  'dotnet'
+  'dotnetcore'
+  'dotnet-isolated'
+  'node'
+  'python'
+  'java'
+  'powershell'
+  'custom'
 ])
 param runtimeName string
 param runtimeVersion string
 var runtimeNameAndVersion = '${runtimeName}|${runtimeVersion}'
-// param storageAccountName string
 param virtualNetworkSubnetId string = ''
 param UserAssignedManagedIdentityId string = ''
 param UserAssignedManagedIdentityClientId string = ''
 param botUserAssignedManagedIdentityId string
-// param enableBlob bool = true
-// param enableQueue bool = false
-// param enableTable bool = false
-// param enableFile bool = false
 
 @allowed(['SystemAssigned', 'UserAssigned'])
 param identityType string
@@ -38,11 +40,13 @@ var baseAppSettings = {
   XDT_MicrosoftApplicationInsights_Mode: 'recommended'
 }
 
+var dotnetSettings = {
+  ASPNETCORE_ENVIRONMENT: 'Production'
+  WEBSITE_RUN_FROM_PACKAGE: '1'
+}
+
 // Merge all app settings
-var allAppSettings = union(
-  appSettings,
-  baseAppSettings
-)
+var allAppSettings = union(appSettings, baseAppSettings, dotnetSettings)
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(applicationInsightsName)) {
   name: applicationInsightsName
@@ -66,7 +70,7 @@ module appservice 'br/public:avm/res/web/site:0.19.4' = {
             '${botUserAssignedManagedIdentityId}'
           ]
     }
-    
+
     siteConfig: {
       linuxFxVersion: runtimeNameAndVersion
       numberOfWorkers: 1
