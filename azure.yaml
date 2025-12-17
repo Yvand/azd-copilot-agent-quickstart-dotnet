@@ -15,4 +15,8 @@ hooks:
       run: ./scripts/map-env-vars.sh
       interactive: true
       continueOnError: false
+  postdeploy:
+    shell: sh
+    run: az webapp restart --subscription "${AZURE_SUBSCRIPTION_ID}" --resource-group "${AZURE_RESOURCE_GROUP_NAME}" --name "${WEBAPP_NAME}"
+    continueOnError: true
   

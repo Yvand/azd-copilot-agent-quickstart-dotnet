@@ -1,10 +1,9 @@
 #!/bin/bash
-
 # -e: immediately exit if any command has a non-zero exit status
 # -o pipefail: prevents errors in a pipeline from being masked
 set -eo pipefail
 
-echo "Mapping current azd environment variables to environment variables in the local machine and in the Azure Web App settings..."
+echo "Updating environment variables locally and in the Azure App Service..."
 envVarsPrefix="M365AgentQuickstart_"
 envVarKeyTenantId="${envVarsPrefix}TokenValidation__TenantId"
 envVarKeyClientIdAudiences="${envVarsPrefix}TokenValidation__Audiences__0"
@@ -40,5 +39,5 @@ $(azd env get-values)
 EOF
 
 az webapp config appsettings set --subscription "$subscription" --name "$webAppName" --resource-group "$rg" --settings $envVarKeyTenantId=$tenantId $envVarKeyClientIdAudiences=$botServiceClientId $envVarKeyClientIdConnections=$botServiceClientId > /dev/null
-echo "Environment variables with prefix '$envVarsPrefix' have been set in the Web App '$webAppName' and in the local machine."
+echo "Environment variables with prefix '$envVarsPrefix' have been set in the Azure App Service '$webAppName' and locally."
 printenv | grep "$envVarsPrefix"
