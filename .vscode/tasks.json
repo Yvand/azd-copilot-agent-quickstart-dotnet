@@ -7,9 +7,7 @@
 			"type": "process",
 			"args": [
 				"clean",
-				"${workspaceFolder}/src/QuickStart.csproj",
-				"/property:GenerateFullPaths=true",
-				"/consoleloggerparameters:NoSummary"
+				"${workspaceFolder}/src/QuickStart.csproj"
 			],
 			"problemMatcher": "$msCompile"
 		},
